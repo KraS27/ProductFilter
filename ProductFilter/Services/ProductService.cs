@@ -15,41 +15,52 @@ namespace ProductFilter.Services
         public IEnumerable<Product> FilterProducts(Dictionary<string, string> filters)
         {
             try
-            {               
-                foreach(string filterName in filters.Keys) 
-                {
-                    switch (filterName)
-                    {
-                        case "name":
-                           return FilterByName(filters[filterName]);
-                        case "is_new":
-                            return IsNew();
-                        case "price":
-
-                    }
-                    return null;
-                }
-                return null;
-            }
-            catch 
             {
-                return null;
+                var filteredProducts = _productRepository.GetAll();
+
+                if(filters.Count > 0 || filters.Count <= 3)
+                {
+                    foreach (string filterName  in filters.Keys)
+                    {
+                        switch (filterName)
+                        {
+                            case "name":
+                                filteredProducts = FilterByName(filteredProducts, filters[filterName]);
+                            break;
+                            case "is_new":
+                                filteredProducts = IsNew(filteredProducts);
+                            break;
+                            default:
+                                throw new ArgumentException();
+                        }
+                    }
+
+                    return filteredProducts.ToList();
+                }
+                else
+                {
+                    return null; // TODO: Throw some exceptions
+                }                 
+            }
+            catch (Exception ex) 
+            {
+                return null; // TODO: Handle exception
             }
         }
 
-        private IEnumerable<Product> FilterByName(string name)
+        private IEnumerable<Product> FilterByName(IEnumerable<Product> products, string name)
         {
-            return _productRepository.GetAll().Where(p => p.Name.Contains(name, StringComparison.OrdinalIgnoreCase)).ToList();
+           return products.Where(p => p.Name.Contains(name, StringComparison.OrdinalIgnoreCase));           
         }
 
-        private IEnumerable<Product> IsNew()
+        private IEnumerable<Product> IsNew(IEnumerable<Product> products)
         {
-            return _productRepository.GetAll().Where(p => p.IsNew == true).ToList();
+            return products.Where(p => p.IsNew == true);
         }
 
-        private IEnumerable<Product> FilterByPrice(int start, int end)
+        private IEnumerable<Product> FilterByPrice(IEnumerable<Product> products, int start, int end)
         {
-            return _productRepository.GetAll().Where(p => p.Price >= start && p.Price <= end).ToList();
+            return products.Where(p => p.Price >= start && p.Price <= end);
         }
     }
 }

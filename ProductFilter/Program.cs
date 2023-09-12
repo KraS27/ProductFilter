@@ -1,3 +1,5 @@
+using ProductFilter.Models;
+using ProductFilter.Repositories;
 using ProductFilter.Services;
 
 namespace ProductFilter
@@ -15,6 +17,7 @@ namespace ProductFilter
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
             builder.Services.AddScoped<IProductService, ProductService>();
+            builder.Services.AddScoped<IBaseRepository<Product>, ProductRepository>();
 
             var app = builder.Build();
 
