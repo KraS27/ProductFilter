@@ -2,6 +2,6 @@
 services:
   redis:
     image: redis
-    container_name: productFilter
+    container_name: redisAPI
     ports:
       - "6379:6379"

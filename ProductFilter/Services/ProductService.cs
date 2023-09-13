@@ -45,7 +45,7 @@ namespace ProductFilter.Services
             }
         }
 
-        private IEnumerable<Product> FilterProducts(IEnumerable<Product> products, Dictionary<string, string> filters)
+        private static IEnumerable<Product> FilterProducts(IEnumerable<Product> products, Dictionary<string, string> filters)
         {
             var filteredProducts = products;
 
@@ -65,7 +65,7 @@ namespace ProductFilter.Services
                             filteredProducts = FilterByPrice(filteredProducts, filters[filterName]).ToList();
                             break;
                         default:
-                            throw new ArgumentException();
+                            throw new ArgumentException(filterName);
                     }
                 }
             }
@@ -73,12 +73,12 @@ namespace ProductFilter.Services
             return filteredProducts;
         }
 
-        private IEnumerable<Product> FilterByName(IEnumerable<Product> products, string subString)
+        private static IEnumerable<Product> FilterByName(IEnumerable<Product> products, string subString)
         {
             return products.Where(p => p.Name.Contains(subString, StringComparison.OrdinalIgnoreCase));
         }
 
-        private IEnumerable<Product> IsNew(IEnumerable<Product> products, string state)
+        private static IEnumerable<Product> IsNew(IEnumerable<Product> products, string state)
         {                      
             if (Convert.ToInt32(state) != 0)
                 return products.Where(p => p.IsNew == true);
@@ -86,7 +86,7 @@ namespace ProductFilter.Services
             return products.Where(p => p.IsNew == false);                     
         }
 
-        private IEnumerable<Product> FilterByPrice(IEnumerable<Product> products, string  str)
+        private static IEnumerable<Product> FilterByPrice(IEnumerable<Product> products, string  str)
         {          
             var startStr = str.Substring(str.IndexOf('(') + 1, str.IndexOf(',') - str.IndexOf('(') - 1);
             decimal start = Convert.ToDecimal(startStr, new CultureInfo("en-US"));
