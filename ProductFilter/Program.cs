@@ -1,6 +1,7 @@
 using ProductFilter.Models;
 using ProductFilter.Repositories;
 using ProductFilter.Services;
+using StackExchange.Redis;
 
 namespace ProductFilter
 {
@@ -11,6 +12,9 @@ namespace ProductFilter
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
+
+            builder.Services.AddSingleton<IConnectionMultiplexer>(options =>
+                ConnectionMultiplexer.Connect(builder.Configuration.GetConnectionString("RedisConnection")));
 
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
