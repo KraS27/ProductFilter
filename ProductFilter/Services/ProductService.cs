@@ -1,5 +1,6 @@
 ﻿using ProductFilter.Models;
 using ProductFilter.Repositories;
+using System.Globalization;
 
 namespace ProductFilter.Services
 {
@@ -12,45 +13,80 @@ namespace ProductFilter.Services
             _productRepository = productRepository;
         }
 
-        public IEnumerable<Product> FilterProducts(Dictionary<string, string> filters)
+        public BaseResponse<IEnumerable<Product>> GetFilteredProducts(Dictionary<string, string> filters)
         {
             try
             {
-                var filteredProducts = _productRepository.GetAll();
-
-                if(filters.Count > 0 || filters.Count <= 3)
+                var products = _productRepository.GetAll();
+                var filteredProducts = FilterProducts(products, filters);
+                
+                return new BaseResponse<IEnumerable<Product>>
                 {
-                    foreach (string filterName  in filters.Keys)
-                    {
-                        switch (filterName)
-                        {
-                            case "name":
-                                filteredProducts = FilterByName(filteredProducts, filters[filterName]);
-                            break;
-                            case "is_new":
-                                filteredProducts = IsNew(filteredProducts);
-                            break;
-                            default:
-                                throw new ArgumentException();
-                        }
-                    }
-
-                    return filteredProducts.ToList();
-                }
-                else
+                    Data = filteredProducts,
+                    Description = $"Recieved {filteredProducts.Count()} products",
+                    StatusCode = StatusCode.Ok
+                };                           
+            }
+            catch (ArgumentException argumentExc)
+            {
+                return new BaseResponse<IEnumerable<Product>>
                 {
-                    return null; // TODO: Throw some exceptions
-                }                 
+                    Data = null,
+                    Description = argumentExc.Message,
+                    StatusCode = StatusCode.BadRequest
+                };
             }
             catch (Exception ex) 
             {
-                return null; // TODO: Handle exception
+                return new BaseResponse<IEnumerable<Product>>
+                {
+                    Data = null,
+                    Description = ex.Message,
+                    StatusCode = StatusCode.InternalServerError
+                };
             }
         }
 
-        private IEnumerable<Product> FilterByName(IEnumerable<Product> products, string name)
+        private IEnumerable<Product> FilterProducts(IEnumerable<Product> products, Dictionary<string, string> filters)
         {
-           return products.Where(p => p.Name.Contains(name, StringComparison.OrdinalIgnoreCase));           
+            var filteredProducts = products;
+
+            if (filters.Count > 0 || filters.Count <= 3)
+            {
+                foreach (string filterName in filters.Keys)
+                {
+                    switch (filterName)
+                    {
+                        case "name":
+                            filteredProducts = FilterByName(filteredProducts, filters[filterName]).ToList();
+                            break;
+                        case "is_new":
+                            filteredProducts = IsNew(filteredProducts).ToList();
+                            break;
+                        case "price":
+
+                            string str = filters[filterName];
+
+                            var startStr = str.Substring(str.IndexOf('(') + 1, str.IndexOf(',') - str.IndexOf('(') - 1);
+                            decimal start = Convert.ToDecimal(startStr, new CultureInfo("en-US"));
+
+                            var endStr = str.Substring(str.IndexOf(',') + 1, str.IndexOf(')') - str.IndexOf(',') - 1);
+                            decimal end = Convert.ToDecimal(endStr, new CultureInfo("en-US"));
+                            filteredProducts = FilterByPrice(filteredProducts, start, end).ToList();
+                            break;
+
+                        default:
+                            throw new ArgumentException();
+                    }
+                }
+            }
+
+            return filteredProducts;
+        }
+
+        private IEnumerable<Product> FilterByName(IEnumerable<Product> products, string subString)
+        {
+            return products.Where(p => p.Name.Contains(subString, StringComparison.OrdinalIgnoreCase));
         }
 
         private IEnumerable<Product> IsNew(IEnumerable<Product> products)
@@ -58,9 +94,9 @@ namespace ProductFilter.Services
             return products.Where(p => p.IsNew == true);
         }
 
-        private IEnumerable<Product> FilterByPrice(IEnumerable<Product> products, int start, int end)
+        private IEnumerable<Product> FilterByPrice(IEnumerable<Product> products, decimal start, decimal end)
         {
             return products.Where(p => p.Price >= start && p.Price <= end);
         }
-    }
+    }        
 }

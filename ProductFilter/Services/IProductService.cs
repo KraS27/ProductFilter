@@ -4,6 +4,6 @@ namespace ProductFilter.Services
 {
     public interface IProductService
     {
-        IEnumerable<Product> FilterProducts(Dictionary<string, string> filters);
+        BaseResponse<IEnumerable<Product>> GetFilteredProducts(Dictionary<string, string> filters);
     }
 }

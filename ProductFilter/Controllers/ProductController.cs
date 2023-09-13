@@ -17,9 +17,14 @@ namespace ProductFilter.Controllers
         [HttpGet("/products")]
         public IActionResult GetFilteredProducts([FromQuery] Dictionary<string, string> filters)
         {
-            var filteredProducts = _productService.FilterProducts(filters);
+            var response = _productService.GetFilteredProducts(filters);
 
-            return new OkObjectResult(filteredProducts);
+            if (response.StatusCode == Models.StatusCode.Ok)
+                return new OkObjectResult(response);
+            else if (response.StatusCode == Models.StatusCode.BadRequest)
+                return new BadRequestResult();
+            else
+                return new BadRequestObjectResult(new {description = response.Description, statusCode = response.StatusCode});         
         }
     }
 }
