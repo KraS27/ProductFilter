@@ -30,8 +30,7 @@ namespace ProductFilter.Services
             catch (ArgumentException argumentExc)
             {
                 return new BaseResponse<IEnumerable<Product>>
-                {
-                    Data = null,
+                {                  
                     Description = argumentExc.Message,
                     StatusCode = StatusCode.BadRequest
                 };
@@ -39,8 +38,7 @@ namespace ProductFilter.Services
             catch (Exception ex) 
             {
                 return new BaseResponse<IEnumerable<Product>>
-                {
-                    Data = null,
+                {                
                     Description = ex.Message,
                     StatusCode = StatusCode.InternalServerError
                 };
@@ -63,18 +61,9 @@ namespace ProductFilter.Services
                         case "is_new":
                             filteredProducts = IsNew(filteredProducts).ToList();
                             break;
-                        case "price":
-
-                            string str = filters[filterName];
-
-                            var startStr = str.Substring(str.IndexOf('(') + 1, str.IndexOf(',') - str.IndexOf('(') - 1);
-                            decimal start = Convert.ToDecimal(startStr, new CultureInfo("en-US"));
-
-                            var endStr = str.Substring(str.IndexOf(',') + 1, str.IndexOf(')') - str.IndexOf(',') - 1);
-                            decimal end = Convert.ToDecimal(endStr, new CultureInfo("en-US"));
-                            filteredProducts = FilterByPrice(filteredProducts, start, end).ToList();
+                        case "price":                                                     
+                            filteredProducts = FilterByPrice(filteredProducts, filters[filterName]).ToList();
                             break;
-
                         default:
                             throw new ArgumentException();
                     }
@@ -94,8 +83,14 @@ namespace ProductFilter.Services
             return products.Where(p => p.IsNew == true);
         }
 
-        private IEnumerable<Product> FilterByPrice(IEnumerable<Product> products, decimal start, decimal end)
-        {
+        private IEnumerable<Product> FilterByPrice(IEnumerable<Product> products, string  str)
+        {          
+            var startStr = str.Substring(str.IndexOf('(') + 1, str.IndexOf(',') - str.IndexOf('(') - 1);
+            decimal start = Convert.ToDecimal(startStr, new CultureInfo("en-US"));
+
+            var endStr = str.Substring(str.IndexOf(',') + 1, str.IndexOf(')') - str.IndexOf(',') - 1);
+            decimal end = Convert.ToDecimal(endStr, new CultureInfo("en-US"));
+
             return products.Where(p => p.Price >= start && p.Price <= end);
         }
     }        
