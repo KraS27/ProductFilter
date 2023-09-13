@@ -24,7 +24,7 @@ namespace ProductFilter.Controllers
             else if (response.StatusCode == Models.StatusCode.BadRequest)
                 return new BadRequestResult();
             else
-                return new BadRequestObjectResult(new {description = response.Description, statusCode = response.StatusCode});         
+                return new BadRequestObjectResult(response);         
         }
     }
 }

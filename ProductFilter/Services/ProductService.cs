@@ -59,7 +59,7 @@ namespace ProductFilter.Services
                             filteredProducts = FilterByName(filteredProducts, filters[filterName]).ToList();
                             break;
                         case "is_new":
-                            filteredProducts = IsNew(filteredProducts).ToList();
+                            filteredProducts = IsNew(filteredProducts, filters[filterName]).ToList();
                             break;
                         case "price":                                                     
                             filteredProducts = FilterByPrice(filteredProducts, filters[filterName]).ToList();
@@ -78,9 +78,12 @@ namespace ProductFilter.Services
             return products.Where(p => p.Name.Contains(subString, StringComparison.OrdinalIgnoreCase));
         }
 
-        private IEnumerable<Product> IsNew(IEnumerable<Product> products)
-        {
-            return products.Where(p => p.IsNew == true);
+        private IEnumerable<Product> IsNew(IEnumerable<Product> products, string state)
+        {                      
+            if (Convert.ToInt32(state) != 0)
+                return products.Where(p => p.IsNew == true);
+
+            return products.Where(p => p.IsNew == false);                     
         }
 
         private IEnumerable<Product> FilterByPrice(IEnumerable<Product> products, string  str)
