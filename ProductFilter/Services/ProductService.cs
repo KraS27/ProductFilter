@@ -54,12 +54,9 @@ namespace ProductFilter.Services
             var cashKey = JsonSerializer.Serialize(filters);
             var cashData = _cache.GetString(cashKey);
 
-            if(cashData != null) 
-            {
-                var cashedFilteredProducts = JsonSerializer.Deserialize<IEnumerable<Product>>(cashData);
-                return cashedFilteredProducts;
-            }
-
+            if(!string.IsNullOrEmpty(cashData))            
+                return JsonSerializer.Deserialize<IEnumerable<Product>>(cashData);
+            
             var filteredProducts = products;
 
             if (filters.Count > 0 || filters.Count <= 3)
@@ -99,15 +96,12 @@ namespace ProductFilter.Services
         }
 
         private static IEnumerable<Product> IsNew(IEnumerable<Product> products, string state)
-        {                      
-            if (Convert.ToInt32(state) != 0)
-                return products.Where(p => p.IsNew == true);
-
-            return products.Where(p => p.IsNew == false);                     
+        {
+            return Convert.ToInt32(state) != 0 ? products.Where(p => p.IsNew == true) : products.Where(p => p.IsNew == false);
         }
 
         private static IEnumerable<Product> FilterByPrice(IEnumerable<Product> products, string  str)
-        {          
+        {                     
             var startStr = str.Substring(str.IndexOf('(') + 1, str.IndexOf(',') - str.IndexOf('(') - 1);
             decimal start = Convert.ToDecimal(startStr, new CultureInfo("en-US"));
 
