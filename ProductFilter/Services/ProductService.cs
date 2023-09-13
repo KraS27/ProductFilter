@@ -1,16 +1,20 @@
-﻿using ProductFilter.Models;
+﻿using Microsoft.Extensions.Caching.Distributed;
+using ProductFilter.Models;
 using ProductFilter.Repositories;
 using System.Globalization;
+using System.Text.Json;
 
 namespace ProductFilter.Services
 {
     public class ProductService : IProductService
     {
         private readonly IBaseRepository<Product> _productRepository;
+        private readonly IDistributedCache _cache;
 
-        public ProductService(IBaseRepository<Product> productRepository)
+        public ProductService(IBaseRepository<Product> productRepository, IDistributedCache cache)
         {
             _productRepository = productRepository;
+            _cache = cache;
         }
 
         public BaseResponse<IEnumerable<Product>> GetFilteredProducts(Dictionary<string, string> filters)
@@ -45,8 +49,17 @@ namespace ProductFilter.Services
             }
         }
 
-        private static IEnumerable<Product> FilterProducts(IEnumerable<Product> products, Dictionary<string, string> filters)
-        {
+        private IEnumerable<Product> FilterProducts(IEnumerable<Product> products, Dictionary<string, string> filters)
+        {           
+            var cashKey = JsonSerializer.Serialize(filters);
+            var cashData = _cache.GetString(cashKey);
+
+            if(cashData != null) 
+            {
+                var cashedFilteredProducts = JsonSerializer.Deserialize<IEnumerable<Product>>(cashData);
+                return cashedFilteredProducts;
+            }
+
             var filteredProducts = products;
 
             if (filters.Count > 0 || filters.Count <= 3)
@@ -65,10 +78,17 @@ namespace ProductFilter.Services
                             filteredProducts = FilterByPrice(filteredProducts, filters[filterName]).ToList();
                             break;
                         default:
-                            throw new ArgumentException(filterName);
+                            throw new ArgumentException(nameof(filterName));
                     }
                 }
             }
+
+            var cacheOptions = new DistributedCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
+            };
+
+            _cache.SetString(cashKey, JsonSerializer.Serialize(filteredProducts), cacheOptions);
 
             return filteredProducts;
         }

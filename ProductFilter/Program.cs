@@ -10,9 +10,14 @@ namespace ProductFilter
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
-           
-            builder.Services.AddSingleton<IConnectionMultiplexer>(options =>
-                ConnectionMultiplexer.Connect(builder.Configuration.GetConnectionString("RedisConnection")));
+
+            //builder.Services.AddSingleton<IConnectionMultiplexer>(options =>
+            //    ConnectionMultiplexer.Connect(builder.Configuration.GetConnectionString("RedisConnection")));
+
+            builder.Services.AddStackExchangeRedisCache(options =>
+            {
+                options.Configuration = builder.Configuration.GetConnectionString("RedisConnection");
+            });
 
             builder.Services.AddControllers();
            
