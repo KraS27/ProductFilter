@@ -103,7 +103,7 @@ namespace ProductFilter.Services
 
         private static IEnumerable<Product> FilterByPrice(IEnumerable<Product> products, string  str)
         {
-            Regex regex = new Regex(@"range[(](\d*.\d*),(\d*)[)]");
+            Regex regex = new Regex(@"range\((\d*[.]?\d*),(\d*[.]?\d*)\)");
             decimal start = 0;
             decimal end = 0;
 
@@ -112,7 +112,7 @@ namespace ProductFilter.Services
                 start = Convert.ToDecimal(match.Groups[1].Value, new CultureInfo("en-US"));
                 end = Convert.ToDecimal(match.Groups[2].Value, new CultureInfo("en-US"));
             }
-           
+            
             return products.Where(p => p.Price >= start && p.Price <= end);
         }
     }        
