@@ -103,14 +103,14 @@ namespace ProductFilter.Services
 
         private static IEnumerable<Product> FilterByPrice(IEnumerable<Product> products, string  str)
         {
-            Regex regex = new Regex(@"range[(](\d*),(\d*)[)]");
+            Regex regex = new Regex(@"range[(](\d*.\d*),(\d*)[)]");
             decimal start = 0;
             decimal end = 0;
 
             foreach(Match match in regex.Matches(str))
             {
-                start = Convert.ToDecimal(match.Groups[1].Value);
-                end = Convert.ToDecimal(match.Groups[2].Value);
+                start = Convert.ToDecimal(match.Groups[1].Value, new CultureInfo("en-US"));
+                end = Convert.ToDecimal(match.Groups[2].Value, new CultureInfo("en-US"));
             }
            
             return products.Where(p => p.Price >= start && p.Price <= end);
