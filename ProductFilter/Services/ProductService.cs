@@ -3,6 +3,7 @@ using ProductFilter.Models;
 using ProductFilter.Repositories;
 using System.Globalization;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 
 namespace ProductFilter.Services
 {
@@ -51,11 +52,11 @@ namespace ProductFilter.Services
 
         private IEnumerable<Product> FilterProducts(IEnumerable<Product> products, Dictionary<string, string> filters)
         {           
-            var cashKey = JsonSerializer.Serialize(filters);
-            var cashData = _cache.GetString(cashKey);
+            //var cashKey = JsonSerializer.Serialize(filters);
+            //var cashData = _cache.GetString(cashKey);
 
-            if(!string.IsNullOrEmpty(cashData))            
-                return JsonSerializer.Deserialize<IEnumerable<Product>>(cashData);
+            //if(!string.IsNullOrEmpty(cashData))            
+            //    return JsonSerializer.Deserialize<IEnumerable<Product>>(cashData);
             
             var filteredProducts = products;
 
@@ -80,12 +81,12 @@ namespace ProductFilter.Services
                 }
             }
 
-            var cacheOptions = new DistributedCacheEntryOptions
-            {
-                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
-            };
+            //var cacheOptions = new DistributedCacheEntryOptions
+            //{
+            //    AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
+            //};
 
-            _cache.SetString(cashKey, JsonSerializer.Serialize(filteredProducts), cacheOptions);
+            //_cache.SetString(cashKey, JsonSerializer.Serialize(filteredProducts), cacheOptions);
 
             return filteredProducts;
         }
@@ -101,13 +102,17 @@ namespace ProductFilter.Services
         }
 
         private static IEnumerable<Product> FilterByPrice(IEnumerable<Product> products, string  str)
-        {                     
-            var startStr = str.Substring(str.IndexOf('(') + 1, str.IndexOf(',') - str.IndexOf('(') - 1);
-            decimal start = Convert.ToDecimal(startStr, new CultureInfo("en-US"));
+        {
+            Regex regex = new Regex(@"range[(](\d*),(\d*)[)]");
+            decimal start = 0;
+            decimal end = 0;
 
-            var endStr = str.Substring(str.IndexOf(',') + 1, str.IndexOf(')') - str.IndexOf(',') - 1);
-            decimal end = Convert.ToDecimal(endStr, new CultureInfo("en-US"));
-
+            foreach(Match match in regex.Matches(str))
+            {
+                start = Convert.ToDecimal(match.Groups[1].Value);
+                end = Convert.ToDecimal(match.Groups[2].Value);
+            }
+           
             return products.Where(p => p.Price >= start && p.Price <= end);
         }
     }        
